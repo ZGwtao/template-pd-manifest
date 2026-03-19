@@ -10,3 +10,7 @@
 	path = microkit
 	url = https://github.com/ZGwtao/microkit.git
 	branch = capdl-dyn
+[submodule "seL4"]
+	path = seL4
+	url = https://github.com/seL4/seL4.git
+	branch = master
