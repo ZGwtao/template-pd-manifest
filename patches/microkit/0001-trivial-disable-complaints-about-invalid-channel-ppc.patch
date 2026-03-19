@@ -1,0 +1,50 @@
+From d35ad5be12fc4a1d35aff1986ad9d8dcec8634fb Mon Sep 17 00:00:00 2001
+From: Guangtao Zhu <guangtaozhu@outlook.com>
+Date: Fri, 20 Mar 2026 00:07:48 +1100
+Subject: [PATCH] trivial: disable complaints about invalid channel/ppc in
+ libmicrokit for dynamic pds
+
+Signed-off-by: Guangtao Zhu <guangtaozhu@outlook.com>
+---
+ libmicrokit/include/microkit.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/libmicrokit/include/microkit.h b/libmicrokit/include/microkit.h
+index 6e2fa45..e9e11c6 100644
+--- a/libmicrokit/include/microkit.h
++++ b/libmicrokit/include/microkit.h
+@@ -96,6 +96,7 @@ static inline void microkit_internal_crash(seL4_Error err)
+ 
+ static inline void microkit_notify(microkit_channel ch)
+ {
++#if 0
+     if (ch > MICROKIT_MAX_CHANNEL_ID || (microkit_notifications & (1ULL << ch)) == 0) {
+         microkit_dbg_puts(microkit_name);
+         microkit_dbg_puts(" microkit_notify: invalid channel given '");
+@@ -103,6 +104,7 @@ static inline void microkit_notify(microkit_channel ch)
+         microkit_dbg_puts("'\n");
+         return;
+     }
++#endif
+     seL4_Signal(BASE_OUTPUT_NOTIFICATION_CAP + ch);
+ }
+ 
+@@ -155,6 +157,7 @@ static inline void microkit_pd_stop(microkit_child pd)
+ 
+ static inline microkit_msginfo microkit_ppcall(microkit_channel ch, microkit_msginfo msginfo)
+ {
++#if 0
+     if (ch > MICROKIT_MAX_CHANNEL_ID || (microkit_pps & (1ULL << ch)) == 0) {
+         microkit_dbg_puts(microkit_name);
+         microkit_dbg_puts(" microkit_ppcall: invalid channel given '");
+@@ -162,6 +165,7 @@ static inline microkit_msginfo microkit_ppcall(microkit_channel ch, microkit_msg
+         microkit_dbg_puts("'\n");
+         return seL4_MessageInfo_new(0, 0, 0, 0);
+     }
++#endif
+     return seL4_Call(BASE_ENDPOINT_CAP + ch, msginfo);
+ }
+ 
+-- 
+2.43.0
+

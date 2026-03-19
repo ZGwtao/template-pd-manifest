@@ -1,0 +1,12 @@
+[submodule "lionsos"]
+	path = lionsos
+	url = ./lionsos
+	branch = protocon-dev
+[submodule "sdfgen"]
+	path = sdfgen
+	url = ./sdfgen
+	branch = proto-container
+[submodule "microkit"]
+	path = microkit
+	url = ./microkit
+	branch = capdl-dyn
