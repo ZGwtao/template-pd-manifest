@@ -7,6 +7,7 @@ $ git checkout 14.0.0
 $ cd ../
 
 $ python3.12 -m venv pyenv
+$ . ./pyenv/bin/activate
 $ cd microkit
 $ ../pyenv/bin/pip install --upgrade pip setuptools wheel
 $ ../pyenv/bin/pip install -r ./requirements.txt
