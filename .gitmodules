@@ -1,7 +1,7 @@
 [submodule "lionsos"]
 	path = lionsos
 	url = https://github.com/ZGwtao/lionsos.git
-	branch = protocon-dev
+	branch = pc-benchmark
 [submodule "sdfgen"]
 	path = sdfgen
 	url = https://github.com/ZGwtao/microkit_sdf_gen.git
@@ -9,7 +9,7 @@
 [submodule "microkit"]
 	path = microkit
 	url = https://github.com/ZGwtao/microkit.git
-	branch = capdl-dyn
+	branch = pc-benchmark
 [submodule "seL4"]
 	path = seL4
 	url = https://github.com/seL4/seL4.git

@@ -1,0 +1,26 @@
+From ca3723edbee52a3b9dbf5135105284bc6f06c7e3 Mon Sep 17 00:00:00 2001
+From: Guangtao Zhu <guangtaozhu@outlook.com>
+Date: Sun, 22 Mar 2026 00:15:47 +1100
+Subject: [PATCH] trivial: (temporary build) debug print silencing
+
+Signed-off-by: Guangtao Zhu <guangtaozhu@outlook.com>
+---
+ include/miscutils.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/miscutils.h b/include/miscutils.h
+index 3f7ea6f..96d3cce 100644
+--- a/include/miscutils.h
++++ b/include/miscutils.h
+@@ -15,7 +15,7 @@ int tsldr_miscutil_strcmp(const char* s1, const char* s2);
+ 
+ void tsldr_miscutil_dbg_print(const char *format, ...);
+ 
+-#if defined(CONFIG_DEBUG_BUILD)
++#if !defined(CONFIG_DEBUG_BUILD)
+ #define TSLDR_DBG_PRINT(...) \
+     do { tsldr_miscutil_dbg_print(__VA_ARGS__); } while (0)
+ #else
+-- 
+2.43.0
+
