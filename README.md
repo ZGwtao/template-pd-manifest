@@ -24,7 +24,7 @@ $ cd lionsos
 $ git submodule update --init
 $ cd examples/proto-container
 $ make
-$ make qemu
+$ make qemu_disk
 ```
 
 At this stage, you should be able to see the red output from the shell of the `protocon` demo. However, this is yet from ready, we need to exit from the QEMU via `Ctrl a` then `x`, and try initialising the `qemu_disk` (i.e., persistent storage for the monitor, shell, and proto-containers)
