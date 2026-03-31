@@ -5,7 +5,7 @@
 [submodule "sdfgen"]
 	path = sdfgen
 	url = https://github.com/ZGwtao/microkit_sdf_gen.git
-	branch = proto-container
+	branch = protocon-dev
 [submodule "microkit"]
 	path = microkit
 	url = https://github.com/ZGwtao/microkit.git
