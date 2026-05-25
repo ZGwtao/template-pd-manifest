@@ -36,7 +36,9 @@ These commands require sudo:
 ```
 $ ./copy2ramdisk.sh build/trampoline.elf 1
 $ ./copy2ramdisk.sh build/protocon.elf 1
-$ ./copy2ramdisk.sh build/client.elf 1
+$ ./copy2ramdisk.sh build/client_faulting.elf 1
+$ ./copy2ramdisk.sh build/client_looping.elf 1
+$ ./copy2ramdisk.sh build/client_echo.elf 1
 ```
 
 The above commands fill out the partition for frontend.
@@ -51,4 +53,4 @@ $ ./copy2ramdisk.sh build/serial_client_protocon3.data 2
 The above commands fill out the partition for monitor
 Now, run `make qemu` again, you should be able to see the logs as in **log1.txt**.
 
-Try: `start client.elf`, and repeat, you can see the results as in **log2.txt**
+Try: `start client_echo.elf`, and repeat, you can see the results as in **log2.txt**
