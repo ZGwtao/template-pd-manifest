@@ -23,34 +23,37 @@ $ export MICROKIT_SDK=$PWD/microkit/release/microkit-sdk-2.1.0-dev
 $ cd lionsos
 $ git submodule update --init
 $ cd examples/proto-container
-$ make
-$ make qemu_disk
+$ make qemu
 ```
 
-At this stage, you should be able to see the red output from the shell of the `protocon` demo. However, this is yet from ready, we need to exit from the QEMU via `Ctrl a` then `x`, and try initialising the `qemu_disk` (i.e., persistent storage for the monitor, shell, and proto-containers)
+At this stage, you should be able to see the red output from the shell of the `protocon` demo.
 
-`$ mkdir build/mbp`
-
-These commands require sudo:
+You can try the following shell commands:
 
 ```
-$ ./copy2ramdisk.sh build/trampoline.elf 1
-$ ./copy2ramdisk.sh build/protocon.elf 1
-$ ./copy2ramdisk.sh build/client_faulting.elf 1
-$ ./copy2ramdisk.sh build/client_looping.elf 1
-$ ./copy2ramdisk.sh build/client_echo.elf 1
+$ start client_echo.elf
+$ lspcs
+$ start client_echo.elf
+$ start client_echo.elf
+$ start client_echo.elf
 ```
 
-The above commands fill out the partition for frontend.
+You should be able to see some intertwined serial colours showing different clients
+are talking to each other via the monitor PD. The `lspcs` command prints out the system
+state, which includes the number of available PDs and their current life cycle states.
+
+It is also worthwhile to try
 
 ```
-$ ./copy2ramdisk.sh build/serial_client_protocon0.data 2
-$ ./copy2ramdisk.sh build/serial_client_protocon1.data 2
-$ ./copy2ramdisk.sh build/serial_client_protocon2.data 2
-$ ./copy2ramdisk.sh build/serial_client_protocon3.data 2
+$ hang -i 0
+$ hang -i 1
+$ resume -i 0
+$ resume -i 1
 ```
 
-The above commands fill out the partition for monitor
-Now, run `make qemu` again, you should be able to see the logs as in **log1.txt**.
+You should be able to see some PD are hang once you type in the `hang` command,
+which follows by the ID of a dynamic PD that you retrieved from the `lspcs` command.
+With the `resume` command, you should be able to resume a PD which is currently hanging.
 
-Try: `start client_echo.elf`, and repeat, you can see the results as in **log2.txt**
+There are also other commands (e.g., `stop -i x`), you can try it out yourselves or
+modify the `frontend` PD (i.e., the shell) to implement the mechanisms you want.
