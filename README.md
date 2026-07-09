@@ -56,4 +56,4 @@ which follows by the ID of a dynamic PD that you retrieved from the `lspcs` comm
 With the `resume` command, you should be able to resume a PD which is currently hanging.
 
 There are also other commands (e.g., `stop -i x`), you can try it out yourselves or
-modify the `frontend` PD (i.e., the shell) to implement the mechanisms you want.
+modify the `orchestrator` PD (i.e., the shell) to implement the mechanisms you want.
