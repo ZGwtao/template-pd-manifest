@@ -1,0 +1,11 @@
+
+pyenv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.DS_Store
+.vscode/
+.idea/
+
+microkit/build/
+microkit/release/
