@@ -1,0 +1,153 @@
+name: Selective submodule image build
+
+on:
+  workflow_dispatch:
+    inputs:
+      shallow:
+        description: Use shallow submodule clones
+        required: true
+        default: true
+        type: boolean
+      no_cache:
+        description: Disable Docker build cache
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Selective submodules
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out repository without submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: Initialize required top-level submodules
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          if [[ "${{ inputs.shallow }}" == "true" ]]; then
+            git submodule update --init --depth 1 seL4 microkit sdfgen lionsos
+          else
+            git submodule update --init seL4 microkit sdfgen lionsos
+          fi
+
+      - name: Initialize required LionsOS submodules
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          if [[ "${{ inputs.shallow }}" == "true" ]]; then
+            git -C lionsos submodule update --init --depth 1 dep/musllibc dep/sddf dep/libmicrokitco dep/libtrustedlo
+          else
+            git -C lionsos submodule update --init dep/musllibc dep/sddf dep/libmicrokitco dep/libtrustedlo
+          fi
+
+      - name: Verify selected submodules
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          test -d seL4
+          test -d microkit
+          test -d sdfgen
+          test -d lionsos
+
+          test -e lionsos/dep/musllibc/.git
+          test -e lionsos/dep/sddf/.git
+          test -e lionsos/dep/libmicrokitco/.git
+          test -e lionsos/dep/libtrustedlo/.git
+
+          echo "Top-level submodule status:"
+          git submodule status
+
+          echo
+          echo "LionsOS submodule status:"
+          git -C lionsos submodule status
+
+          echo
+          echo "Required LionsOS dependencies:"
+          du -sh lionsos/dep/musllibc lionsos/dep/sddf lionsos/dep/libmicrokitco lionsos/dep/libtrustedlo
+
+      - name: Verify MicroPython was not initialized
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          micropython_size="$(
+            du -sk lionsos/dep/micropython 2>/dev/null |
+            awk '{ print $1 }'
+          )"
+          micropython_size="${micropython_size:-0}"
+
+          echo "MicroPython working-tree size: ${micropython_size} KiB"
+
+          if (( micropython_size > 1024 )); then
+            echo "::error::lionsos/dep/micropython was unexpectedly initialized"
+            du -sh lionsos/dep/micropython || true
+            exit 1
+          fi
+
+          if [[ -e .git/modules/lionsos/modules/dep/micropython ]]; then
+            echo "::error::MicroPython Git objects were unexpectedly downloaded"
+            du -sh .git/modules/lionsos/modules/dep/micropython || true
+            exit 1
+          fi
+
+      - name: Show checkout sizes
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          echo "Repository size:"
+          du -sh .
+
+          echo
+          echo "Top-level paths:"
+          du -sh .git seL4 microkit sdfgen lionsos |
+            sort -h
+
+          echo
+          echo "Largest LionsOS directories:"
+          du -xh --max-depth=2 lionsos 2>/dev/null |
+            sort -h |
+            tail -30
+
+          echo
+          echo "Largest Git metadata directories:"
+          du -xh --max-depth=4 .git/modules 2>/dev/null |
+            sort -h |
+            tail -30 || true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image without publishing (with cache)
+        if: ${{ !inputs.no_cache }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: template-pd-manifest-env:selective-test
+          cache-from: type=gha,scope=selective-submodules
+          cache-to: type=gha,mode=max,scope=selective-submodules
+
+      - name: Build image without publishing (no cache)
+        if: ${{ inputs.no_cache }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          no-cache: true
+          tags: template-pd-manifest-env:selective-test
