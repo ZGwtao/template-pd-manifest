@@ -1,4 +1,4 @@
-name: Selective submodule image build
+name: Build and publish selective image
 
 on:
   workflow_dispatch:
@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -36,9 +37,9 @@ jobs:
           set -euxo pipefail
 
           if [[ "${{ inputs.shallow }}" == "true" ]]; then
-            git submodule update --init --depth 1 seL4 microkit sdfgen lionsos
+            git submodule update   --init   --depth 1   seL4   microkit   sdfgen   lionsos
           else
-            git submodule update --init seL4 microkit sdfgen lionsos
+            git submodule update   --init   seL4   microkit   sdfgen   lionsos
           fi
 
       - name: Initialize required LionsOS submodules
@@ -47,9 +48,9 @@ jobs:
           set -euxo pipefail
 
           if [[ "${{ inputs.shallow }}" == "true" ]]; then
-            git -C lionsos submodule update --init --depth 1 dep/musllibc dep/sddf dep/libmicrokitco dep/libtrustedlo
+            git -C lionsos submodule update   --init   --depth 1   dep/musllibc   dep/sddf   dep/libmicrokitco   dep/libtrustedlo
           else
-            git -C lionsos submodule update --init dep/musllibc dep/sddf dep/libmicrokitco dep/libtrustedlo
+            git -C lionsos submodule update   --init   dep/musllibc   dep/sddf   dep/libmicrokitco   dep/libtrustedlo
           fi
 
       - name: Verify selected submodules
@@ -57,31 +58,10 @@ jobs:
         run: |
           set -euxo pipefail
 
-          test -d seL4
-          test -d microkit
-          test -d sdfgen
-          test -d lionsos
-
           test -e lionsos/dep/musllibc/.git
           test -e lionsos/dep/sddf/.git
           test -e lionsos/dep/libmicrokitco/.git
           test -e lionsos/dep/libtrustedlo/.git
-
-          echo "Top-level submodule status:"
-          git submodule status
-
-          echo
-          echo "LionsOS submodule status:"
-          git -C lionsos submodule status
-
-          echo
-          echo "Required LionsOS dependencies:"
-          du -sh lionsos/dep/musllibc lionsos/dep/sddf lionsos/dep/libmicrokitco lionsos/dep/libtrustedlo
-
-      - name: Verify MicroPython was not initialized
-        shell: bash
-        run: |
-          set -euxo pipefail
 
           micropython_size="$(
             du -sk lionsos/dep/micropython 2>/dev/null |
@@ -93,13 +73,11 @@ jobs:
 
           if (( micropython_size > 1024 )); then
             echo "::error::lionsos/dep/micropython was unexpectedly initialized"
-            du -sh lionsos/dep/micropython || true
             exit 1
           fi
 
           if [[ -e .git/modules/lionsos/modules/dep/micropython ]]; then
             echo "::error::MicroPython Git objects were unexpectedly downloaded"
-            du -sh .git/modules/lionsos/modules/dep/micropython || true
             exit 1
           fi
 
@@ -108,46 +86,41 @@ jobs:
         run: |
           set -euxo pipefail
 
-          echo "Repository size:"
           du -sh .
+          du -sh .git seL4 microkit sdfgen lionsos | sort -h
 
-          echo
-          echo "Top-level paths:"
-          du -sh .git seL4 microkit sdfgen lionsos |
-            sort -h
-
-          echo
           echo "Largest LionsOS directories:"
           du -xh --max-depth=2 lionsos 2>/dev/null |
             sort -h |
             tail -30
 
-          echo
-          echo "Largest Git metadata directories:"
-          du -xh --max-depth=4 .git/modules 2>/dev/null |
-            sort -h |
-            tail -30 || true
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build image without publishing (with cache)
+      - name: Build and publish image with cache
         if: ${{ !inputs.no_cache }}
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: false
-          tags: template-pd-manifest-env:selective-test
+          push: true
+          tags: ghcr.io/zgwtao/template-pd-manifest-env:selective
           cache-from: type=gha,scope=selective-submodules
           cache-to: type=gha,mode=max,scope=selective-submodules
 
-      - name: Build image without publishing (no cache)
+      - name: Build and publish image without cache
         if: ${{ inputs.no_cache }}
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: false
+          push: true
           no-cache: true
-          tags: template-pd-manifest-env:selective-test
+          tags: ghcr.io/zgwtao/template-pd-manifest-env:selective
